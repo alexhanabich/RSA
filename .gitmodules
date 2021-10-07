@@ -1,0 +1,3 @@
+[submodule "fast-mod-exp"]
+	path = fast-mod-exp
+	url = git@github.com:alexhanabich/fast-mod-exp.git
