@@ -1,58 +1,56 @@
-from Crypto.Util import number
-from fast_mod_exp.fastmodexp import mod_exp
+from helper import mod_exp, generate_prime, mult_inv, gcd
 
-
-# based on the theorm that gcd(a,b) = gcd(b,a%b)
-def gcd(a,b):
-    while b > 0:
-        a,b = b, a % b
-    return a
-
-
-# if xa + yb = 1
-# then xa = 1 mod b (mod b removes all multiples of b)
-# then x = a^(-1) mod b
-# using an adaptation of egcd
-def mult_inv(a, n):
-    t, newt = 0 ,1
-    r, newr = n, a
-    while newr != 0:
-        q = r//newr
-        t, newt = newt, t-q*newt
-        r, newr = newr, r-q*newr
-    if r > 1:
-        raise Exception('not invertible')
-    return t%n
-
-def generate():
-    len_bit = 512
-    e = 65537
-    while True:
-        p = number.getPrime(len_bit)
-        q = number.getPrime(len_bit)
-        phi = (p-1)*(q-1)
-        if p >> (len_bit-1) == 1 and q >> (len_bit-1) == 1:
-            if gcd(phi, e) == 1:
-                break
-    n = p*q
+def calc_private_key(e, p, q):
     phi = (p-1)*(q-1)
     d = mult_inv(e, phi)
-    return p, q, n, phi, d
+    return d
 
 
-
-p, q, n, phi, d = generate()
-e = 65537
-def encrypt(message):
-    return mod_exp(message, e, n)
+def encrypt(msg, e, n):
+    return mod_exp(msg, e, n)
 
 
-def decript(message, d):
-    return mod_exp(message, d, n)
+def decript(msg, d, n):
+    return mod_exp(msg, d, n)
+
+class RSA():
+    def __init__(self, key_bit=None):
+        if key_bit == None:
+            self.key_bit = 2048
+        else:
+            self.key_bit = key_bit
+        self.prime_bit = self.key_bit//2
+        self.e = 65537
 
 
+    def generate_keys(self):
+        # generate public key n
+        p = generate_prime(self.prime_bit)
+        q = generate_prime(self.prime_bit)
+        # generate primes while gcd(e, phi) != 1
+        phi = (p-1)*(q-1)
+        while gcd(phi, self.e) != 1:
+            p = generate_prime(self.prime_bit)
+            q = generate_prime(self.prime_bit)
+            phi = (p-1)*(q-1)
+        n = p*q
+        # calculate private key: d
+        phi = (p-1)*(q-1)
+        d = mult_inv(self.e, phi)
+        return n, d, self.e
 
-message = 1234567890
-cipher = encrypt(message)
+
+    def encrypt(self, msg, e, n):
+        return mod_exp(msg, e, n)
+
+
+    def decript(self, msg, d, n):
+        return mod_exp(msg, d, n)
+
+
+msg = 1234567890
+rsa = RSA()
+n, d, e = rsa.generate_keys()
+cipher = rsa.encrypt(msg, e, n)
 print(cipher)
-print(decript(cipher, d))
+print(decript(cipher, d, n))
