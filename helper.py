@@ -37,13 +37,10 @@ def miller_rabin(n,k):
 def generate_prime(prime_bit):
     low = pow(2, prime_bit-1)
     high = pow(2, prime_bit)-1
-    cnt = 0
     while True:
         rand_num = random.getrandbits(prime_bit)
-        cnt += 1
         while rand_num not in range(low, high+1) or not rand_num%2:
             rand_num = random.getrandbits(prime_bit)
-            cnt += 1
         if miller_rabin(rand_num, 64):
             return rand_num
 

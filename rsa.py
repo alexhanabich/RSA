@@ -1,18 +1,5 @@
 from helper import mod_exp, generate_prime, mult_inv, gcd
 
-def calc_private_key(e, p, q):
-    phi = (p-1)*(q-1)
-    d = mult_inv(e, phi)
-    return d
-
-
-def encrypt(msg, e, n):
-    return mod_exp(msg, e, n)
-
-
-def decript(msg, d, n):
-    return mod_exp(msg, d, n)
-
 class RSA():
     def __init__(self, key_bit=None):
         if key_bit == None:
@@ -40,17 +27,22 @@ class RSA():
         return n, d, self.e
 
 
-    def encrypt(self, msg, e, n):
-        return mod_exp(msg, e, n)
+    def encrypt(self, msg:bytes, e:int, n:int)->bytes:
+        msg = int.from_bytes(msg, "big")
+        cipher = mod_exp(msg, e, n)
+        return cipher.to_bytes((cipher.bit_length()+7)//8, 'big')
 
 
-    def decript(self, msg, d, n):
-        return mod_exp(msg, d, n)
+    def decrypt(self, msg:bytes, d:int, n:int)->bytes:
+        msg = int.from_bytes(msg, "big")
+        plain = mod_exp(msg, d, n)
+        return plain.to_bytes((plain.bit_length()+7)//8, 'big')
 
 
-msg = 1234567890
+msg = b'helloworld'
 rsa = RSA()
 n, d, e = rsa.generate_keys()
 cipher = rsa.encrypt(msg, e, n)
 print(cipher)
-print(decript(cipher, d, n))
+plain = rsa.decrypt(cipher, d, n)
+print(plain)
